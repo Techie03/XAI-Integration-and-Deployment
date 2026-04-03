@@ -772,109 +772,162 @@
       <div class="step"><span class="step-num">4</span>View results</div>
     </div>
 
-   <div class="mockup-body">
-  
-  <!-- Status -->
-  <div style="font-family:var(--mono);font-size:11px;margin-top:10px;display:flex;gap:8px;align-items:center;">
-    <span class="tag green">JSON schema valid</span>
-    <span style="color:var(--text-dim)">All required fields present</span>
-  </div>
+    <div class="mockup-body">
+      <!-- Left: Input -->
+      <div>
+        <div class="mock-panel" style="margin-bottom:1rem;">
+          <div class="mock-label">Resume Input</div>
+          <div class="mock-file-zone">
+            <span class="mock-file-name">mp_abhinav_resume.pdf</span>
+            <span class="mock-file-meta">142 KB · 2 pages · text extracted</span>
+            <div class="mock-drop-hint">Drop a new file or click to upload (PDF, DOCX)</div>
+            <div class="progress-bar" style="margin-top:10px;"><div class="progress-fill" style="width:100%"></div></div>
+          </div>
+          <div class="token-row">Resume tokens <span>1,847 / 10k</span></div>
+          <div class="token-row">JD tokens <span>0 / 10k</span></div>
+          <div class="token-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:2px;">Total prompt <span>1,847 / 10k</span></div>
+        </div>
 
-  <!-- Metrics tab -->
-  <div id="tab-metrics" style="display:none;">
-    <div class="metrics-grid">
-      <div class="metric-box">
-        <span class="metric-val">96%</span>
-        <span class="metric-lbl">Schema validity</span>
+        <div class="mock-panel" style="margin-bottom:1rem;">
+          <div class="mock-label">Job Description</div>
+          <textarea class="mock-jd" readonly>Senior Software Engineer — [Company Name]
+We are looking for a software engineer with experience in Java, Spring Boot, AWS/GCP, and microservices. Must have proficiency in Python and modern AI/ML workflows. Familiarity with LLMs, document parsing, and agentic systems is a strong plus.</textarea>
+          <div class="token-row">JD tokens <span>312 / 10k</span></div>
+        </div>
+
+        <div class="mock-panel">
+          <div class="mock-label" style="margin-bottom:8px;">Output Mode</div>
+          <div class="radio-group">
+            <div class="radio-opt sel">Structured JSON</div>
+            <div class="radio-opt">Plain text</div>
+          </div>
+          <div class="mock-label" style="margin-bottom:8px;">Inference Mode</div>
+          <div class="radio-group">
+            <div class="radio-opt sel">Real-time (stream)</div>
+            <div class="radio-opt">Batch (queue)</div>
+          </div>
+          <button class="mock-btn" onclick="runInference()">
+            <span id="btn-text">Generate tailored resume →</span>
+          </button>
+        </div>
       </div>
-      <div class="metric-box">
-        <span class="metric-val">0.83</span>
-        <span class="metric-lbl">Semantic similarity</span>
-      </div>
-      <div class="metric-box">
-        <span class="metric-val">91%</span>
-        <span class="metric-lbl">Skill coverage</span>
-      </div>
-      <div class="metric-box">
-        <span class="metric-val">0</span>
-        <span class="metric-lbl">Hallucinations</span>
-      </div>
-    </div>
-    <div class="latency-row">
-      <span>Latency: <span style="color:var(--accent)">24s</span></span>
-      <span>Tokens: <span style="color:var(--accent)">1,183</span></span>
-      <span>Cost: <span style="color:var(--accent3)">~$0.0003</span></span>
-    </div>
-  </div>
 
-  <!-- 🔥 Upload + PDF Preview -->
-  <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
-    
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px;">
-      Upload Resume (PDF)
-    </div>
+      <!-- Right: Output -->
+      <div>
+        <div class="mock-panel" style="height:100%;">
+          <div class="output-tabs">
+            <div class="out-tab active" onclick="showTab('preview',this)">Resume preview</div>
+            <div class="out-tab" onclick="showTab('json',this)">JSON schema</div>
+            <div class="out-tab" onclick="showTab('metrics',this)">Metrics</div>
+          </div>
 
-    <input type="file" id="resumeInput" accept="application/pdf"
-      style="font-family:var(--mono);font-size:11px;margin-bottom:10px;" />
+          <!-- Preview tab -->
+          <div id="tab-preview" class="resume-preview">
+            <h4>MALLARAPU PAVAN ABHINAV</h4>
+            <div class="rp-meta">pempabhinav1426@gmail.com · linkedin.com/in/abhinav1426 · Hyderabad, India</div>
 
-    <div id="fileName" style="font-size:10px;color:var(--text-dim);margin-bottom:8px;"></div>
+            <div class="rp-section">
+              <div class="rp-sec-title">Summary</div>
+              <p style="font-size:12px;margin:0;color:var(--text-muted)">Software Engineer with 3+ years at ADP building scalable microservices, Java/Spring Boot backends, and GenAI-powered data pipelines on AWS and GCP. Experienced in LLM integration, document parsing, and agentic workflows.</p>
+            </div>
 
-    <iframe id="pdfViewer"
-      style="width:100%; height:400px; border:1px solid var(--border); border-radius:6px; display:none;">
-    </iframe>
+            <div class="rp-section">
+              <div class="rp-sec-title">Experience</div>
+              <div class="rp-role">Software Engineer · ADP</div>
+              <div class="rp-company">June 2022 – Present · Hyderabad, India</div>
+              <ul class="rp-bullets" style="margin-top:5px;">
+                <li>Built GenAI-powered data extraction system (Project Manthan), cutting onboarding from 6 months to 15 days</li>
+                <li>Designed asynchronous Java application gateway to manage high-traffic microservice routing</li>
+                <li>Managed Spring Boot &amp; JDK lifecycle upgrades across multiple production microservices</li>
+                <li>Contributed to LLM training for complex document parsing and data extraction workflows</li>
+                <li>Resolved security vulnerabilities and optimized Smart Compliance Canada application performance</li>
+              </ul>
+            </div>
 
-  </div>
+            <div class="rp-section">
+              <div class="rp-sec-title">Skills</div>
+              <div class="skill-pills">
+                <span class="skill-pill">Java</span>
+                <span class="skill-pill">Spring Boot</span>
+                <span class="skill-pill">Python</span>
+                <span class="skill-pill">AWS</span>
+                <span class="skill-pill">GCP</span>
+                <span class="skill-pill">LLM</span>
+                <span class="skill-pill">MCP</span>
+                <span class="skill-pill">ReactJs</span>
+                <span class="skill-pill">Docker</span>
+                <span class="skill-pill">Kubernetes</span>
+                <span class="skill-pill">Postgres SQL</span>
+                <span class="skill-pill">MongoDB</span>
+              </div>
+            </div>
+          </div>
 
-  <!-- API snippet -->
-  <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:6px;display:flex;justify-content:space-between;">
-      <span>POST /optimize &nbsp;·&nbsp; REST API endpoint</span>
-      <button onclick="copySnippet()" style="background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer;" id="copy-btn">copy</button>
-    </div>
+          <!-- JSON tab -->
+          <div id="tab-json" style="display:none;">
+            <pre style="font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.8;overflow-x:auto;">{
+  <span style="color:var(--accent)">"name"</span>: <span style="color:var(--accent3)">"MALLARAPU PAVAN ABHINAV"</span>,
+  <span style="color:var(--accent)">"email"</span>: <span style="color:var(--accent3)">"pempabhinav1426@gmail.com"</span>,
+  <span style="color:var(--accent)">"summary"</span>: <span style="color:var(--accent3)">"Software Engineer with..."</span>,
+  <span style="color:var(--accent)">"skills"</span>: [<span style="color:var(--accent3)">"Java"</span>, <span style="color:var(--accent3)">"Spring Boot"</span>, ...],
+  <span style="color:var(--accent)">"experience"</span>: [{
+    <span style="color:var(--accent)">"company"</span>: <span style="color:var(--accent3)">"ADP"</span>,
+    <span style="color:var(--accent)">"bullets"</span>: [...]
+  }],
+  <span style="color:var(--accent)">"education"</span>: [...],
+  <span style="color:var(--accent)">"projects"</span>: [...]
+}</pre>
+            <div style="font-family:var(--mono);font-size:11px;margin-top:10px;display:flex;gap:8px;align-items:center;">
+              <span class="tag green">JSON schema valid</span>
+              <span style="color:var(--text-dim)">All required fields present</span>
+            </div>
+          </div>
 
-    <pre id="api-snippet" style="font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.7;overflow-x:auto;">
+          <!-- Metrics tab -->
+          <div id="tab-metrics" style="display:none;">
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <span class="metric-val">96%</span>
+                <span class="metric-lbl">Schema validity</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-val">0.83</span>
+                <span class="metric-lbl">Semantic similarity</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-val">91%</span>
+                <span class="metric-lbl">Skill coverage</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-val">0</span>
+                <span class="metric-lbl">Hallucinations</span>
+              </div>
+            </div>
+            <div class="latency-row">
+              <span>Latency: <span style="color:var(--accent)">24s</span></span>
+              <span>Tokens: <span style="color:var(--accent)">1,183</span></span>
+              <span>Cost: <span style="color:var(--accent3)">~$0.0003</span></span>
+            </div>
+          </div>
+
+          <!-- API snippet -->
+          <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:6px;display:flex;justify-content:space-between;">
+              <span>POST /optimize &nbsp;·&nbsp; REST API endpoint</span>
+              <button onclick="copySnippet()" style="background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer;" id="copy-btn">copy</button>
+            </div>
+            <pre id="api-snippet" style="font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.7;overflow-x:auto;">resume_file: mp_abhinav_resume.pdf
 mode: "realtime"
 stream: true
 
 ← returns: tailored_resume (JSON)
            + schema_valid: true
-           + quality_metrics
-    </pre>
+           + quality_metrics</pre>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-
-</div>
-
-<script>
-const resumeInput = document.getElementById("resumeInput");
-const pdfViewer = document.getElementById("pdfViewer");
-const fileName = document.getElementById("fileName");
-
-resumeInput.addEventListener("change", function (event) {
-    const file = event.target.files[0];
-
-    if (file && file.type === "application/pdf") {
-        const fileURL = URL.createObjectURL(file);
-
-        pdfViewer.src = fileURL;
-        pdfViewer.style.display = "block";
-
-        fileName.textContent = "Uploaded: " + file.name;
-    } else {
-        alert("Please upload a valid PDF file.");
-        pdfViewer.style.display = "none";
-        fileName.textContent = "";
-    }
-});
-
-function copySnippet() {
-    const text = document.getElementById("api-snippet").innerText;
-    navigator.clipboard.writeText(text);
-
-    const btn = document.getElementById("copy-btn");
-    btn.innerText = "copied!";
-    setTimeout(() => btn.innerText = "copy", 1500);
-}
-</script>
 
   <!-- Workflow Steps -->
   <h3 style="font-family:var(--mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:2rem 0 0.75rem;">Conceptual Workflow — How Data Moves Through the System</h3>
