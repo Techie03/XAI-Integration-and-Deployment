@@ -1029,19 +1029,7 @@ stream: true
       <p>Cross-referencing generated bullets and skills against the original source resume.</p>
     </div>
   </div>
-<div class="monitor-card">
-  <div class="m-icon">📉</div>
-  <h4>Model Drift Detection</h4>
-  <p>Continuously compares incoming job descriptions and resumes with the training data distribution. Detects shifts in skill keywords, formatting patterns, and semantic embeddings.</p>
-</div>
-  <div class="important-note">
-  <div class="note-label">📊 Model Drift Monitoring</div>
-  <p>
-    The system monitors <strong>data drift</strong> by comparing incoming resumes and job descriptions with the original training distribution.
-    This includes tracking changes in skill frequency, document structure, and embedding similarity scores.
-    If drift exceeds a predefined threshold, the system flags the model for retraining.
-  </p>
-</div>
+
   <h3 style="font-family:var(--mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:1.5rem 0 0.75rem;">Practical Maintenance Plan</h3>
   <ul class="maint-list">
     <li>
@@ -1065,67 +1053,11 @@ stream: true
       <div>Track hallucination detection results — ensure generated bullets and credentials trace back to content present in the submitted resume, not invented by the model.</div>
     </li>
   </ul>
-<h3 style="font-family:var(--mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:1.5rem 0 0.75rem;">
-Retraining Strategy
-</h3>
 
-<ul class="maint-list">
-  <li>
-    <div class="maint-check">✓</div>
-    <div>Trigger retraining when model drift exceeds threshold or performance metrics degrade significantly.</div>
-  </li>
-  <li>
-    <div class="maint-check">✓</div>
-    <div>Incorporate new resume-job pairs collected from production into the training dataset.</div>
-  </li>
-  <li>
-    <div class="maint-check">✓</div>
-    <div>Re-train LoRA adapters periodically (monthly or quarterly) instead of full model retraining to reduce cost.</div>
-  </li>
-  <li>
-    <div class="maint-check">✓</div>
-    <div>Validate updated model using schema validity, hallucination rate, and semantic similarity before deployment.</div>
-  </li>
-</ul>
   <blockquote>
     This is especially important because the system is built around long, unstructured resume documents and job descriptions, while also requiring strict schema-based output. In production, a model that still runs but starts violating JSON structure or inventing unsupported content would not be acceptable — reliability of schema adherence is a non-negotiable production requirement.
   </blockquote>
 </section>
-
-  <h3 style="font-family:var(--mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:1.5rem 0 0.75rem;">
-Live Monitoring Dashboard — Qwen 4B SLM
-</h3>
-
-<div class="card">
-  <div class="card-title">📡 Real-Time Observability</div>
-  <p>
-    In a production deployment, a live monitoring dashboard (e.g., Grafana or Prometheus) would track system and model performance in real time.
-    This dashboard provides visibility into both infrastructure and model-level metrics.
-  </p>
-
-  <div class="monitor-grid">
-    <div class="monitor-card">
-      <h4>GPU Utilization</h4>
-      <p>Real-time tracking of VRAM usage and compute load on Qwen3-4B inference server.</p>
-    </div>
-    <div class="monitor-card">
-      <h4>Request Throughput</h4>
-      <p>Number of API requests processed per minute across real-time and batch modes.</p>
-    </div>
-    <div class="monitor-card">
-      <h4>Latency Trends</h4>
-      <p>Time-series tracking of response latency to detect slowdowns or bottlenecks.</p>
-    </div>
-    <div class="monitor-card">
-      <h4>Output Quality Score</h4>
-      <p>Aggregated score combining schema validity, semantic similarity, and hallucination rate.</p>
-    </div>
-    <div class="monitor-card">
-      <h4>Error Alerts</h4>
-      <p>Automated alerts triggered when failure rate or drift exceeds safe thresholds.</p>
-    </div>
-  </div>
-</div>
 
 <!-- SECTION 04 — Team -->
 <section class="section" id="team">
