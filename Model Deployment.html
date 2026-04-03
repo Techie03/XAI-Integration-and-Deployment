@@ -821,6 +821,75 @@ We are looking for a software engineer with experience in Java, Spring Boot, AWS
             <div class="out-tab" onclick="showTab('metrics',this)">Metrics</div>
           </div>
 
+          <!-- PDF.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<div class="mockup-body">
+
+  <!-- Upload -->
+  <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px;">
+    Upload Resume (PDF)
+  </div>
+
+  <input type="file" id="resumeInput" accept="application/pdf"
+    style="font-family:var(--mono);font-size:11px;margin-bottom:10px;" />
+
+  <div id="fileName" style="font-size:10px;color:var(--text-dim);margin-bottom:8px;"></div>
+
+  <!-- 🔥 PDF Viewer -->
+  <div id="pdfViewerContainer" style="border:1px solid var(--border);border-radius:6px;overflow:auto;height:500px;background:#1e1e1e;">
+    <canvas id="pdfCanvas"></canvas>
+  </div>
+
+</div>
+
+<script>
+const input = document.getElementById("resumeInput");
+const canvas = document.getElementById("pdfCanvas");
+const ctx = canvas.getContext("2d");
+const fileName = document.getElementById("fileName");
+
+let pdfDoc = null;
+let currentPage = 1;
+let scale = 1.2;
+
+// Load PDF
+input.addEventListener("change", function(e) {
+    const file = e.target.files[0];
+
+    if (file && file.type === "application/pdf") {
+        fileName.textContent = "Uploaded: " + file.name;
+
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+            const typedarray = new Uint8Array(this.result);
+
+            pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                pdfDoc = pdf;
+                currentPage = 1;
+                renderPage(currentPage);
+            });
+        };
+        fileReader.readAsArrayBuffer(file);
+    }
+});
+
+// Render page
+function renderPage(num) {
+    pdfDoc.getPage(num).then(function(page) {
+        const viewport = page.getViewport({ scale: scale });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        page.render({
+            canvasContext: ctx,
+            viewport: viewport
+        });
+    });
+}
+</script>
+
           <!-- Preview tab -->
           <div id="tab-preview" class="resume-preview">
             <h4>MALLARAPU PAVAN ABHINAV</h4>
