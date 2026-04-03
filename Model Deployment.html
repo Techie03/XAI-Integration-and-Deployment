@@ -778,7 +778,27 @@
         <div class="mock-panel" style="margin-bottom:1rem;">
           <div class="mock-label">Resume Input</div>
           <div class="mock-file-zone">
-            <span class="mock-file-name">mp_abhinav_resume.pdf</span>
+            <span class="mock-file-name"
+      style="color:var(--accent);cursor:pointer;text-decoration:underline;"
+      onclick="openPDF()">
+  mp_abhinav_resume.pdf
+</span>
+
+<!-- PDF Viewer -->
+<div id="pdfContainer" style="margin-top:12px;display:none;">
+  <iframe id="pdfFrame"
+          style="width:100%;height:600px;border:1px solid var(--border);border-radius:6px;">
+  </iframe>
+</div>
+
+<script>
+function openPDF() {
+  const url = "https://raw.githubusercontent.com/Techie03/XAI-Integration-and-Deployment/1ed1bfef07d388a7902ed47f89b8a3abd2341b49/mp_abhinav_resume__2__20251205_230011.pdf";
+
+  document.getElementById("pdfFrame").src = url;
+  document.getElementById("pdfContainer").style.display = "block";
+}
+</script>
             <span class="mock-file-meta">142 KB · 2 pages · text extracted</span>
             <div class="mock-drop-hint">Drop a new file or click to upload (PDF, DOCX)</div>
             <div class="progress-bar" style="margin-top:10px;"><div class="progress-fill" style="width:100%"></div></div>
@@ -820,57 +840,6 @@ We are looking for a software engineer with experience in Java, Spring Boot, AWS
             <div class="out-tab" onclick="showTab('json',this)">JSON schema</div>
             <div class="out-tab" onclick="showTab('metrics',this)">Metrics</div>
           </div>
-
-          
-
-</div>
-
-<script>
-const input = document.getElementById("resumeInput");
-const canvas = document.getElementById("pdfCanvas");
-const ctx = canvas.getContext("2d");
-const fileName = document.getElementById("fileName");
-
-let pdfDoc = null;
-let currentPage = 1;
-let scale = 1.2;
-
-// Load PDF
-input.addEventListener("change", function(e) {
-    const file = e.target.files[0];
-
-    if (file && file.type === "application/pdf") {
-        fileName.textContent = "Uploaded: " + file.name;
-
-        const fileReader = new FileReader();
-        fileReader.onload = function() {
-            const typedarray = new Uint8Array(this.result);
-
-            pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
-                pdfDoc = pdf;
-                currentPage = 1;
-                renderPage(currentPage);
-            });
-        };
-        fileReader.readAsArrayBuffer(file);
-    }
-});
-
-// Render page
-function renderPage(num) {
-    pdfDoc.getPage(num).then(function(page) {
-        const viewport = page.getViewport({ scale: scale });
-
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        page.render({
-            canvasContext: ctx,
-            viewport: viewport
-        });
-    });
-}
-</script>
 
           <!-- Preview tab -->
           <div id="tab-preview" class="resume-preview">
