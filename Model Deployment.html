@@ -784,7 +784,6 @@
   mp_abhinav_resume.pdf
 </span>
 
-<!-- PDF Viewer -->
 <div id="pdfContainer" style="margin-top:12px;display:none;">
   <iframe id="pdfFrame"
           style="width:100%;height:600px;border:1px solid var(--border);border-radius:6px;">
@@ -793,9 +792,12 @@
 
 <script>
 function openPDF() {
-  const url = "https://raw.githubusercontent.com/Techie03/XAI-Integration-and-Deployment/1ed1bfef07d388a7902ed47f89b8a3abd2341b49/mp_abhinav_resume__2__20251205_230011.pdf";
+  const rawUrl = "https://raw.githubusercontent.com/Techie03/XAI-Integration-and-Deployment/1ed1bfef07d388a7902ed47f89b8a3abd2341b49/mp_abhinav_resume__2__20251205_230011.pdf";
 
-  document.getElementById("pdfFrame").src = url;
+  // ✅ Google viewer wrapper
+  const viewerUrl = "https://docs.google.com/gview?url=" + encodeURIComponent(rawUrl) + "&embedded=true";
+
+  document.getElementById("pdfFrame").src = viewerUrl;
   document.getElementById("pdfContainer").style.display = "block";
 }
 </script>
