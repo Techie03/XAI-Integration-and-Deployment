@@ -1,109 +1,1151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Model Deployment</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script> <!-- Added PDF.js script -->
-    
-    <style>
-        :root {
-            --surface: #121212; /* Example dark theme surface color */
-            --accent: #1db954; /* Example accent color */
-            --text-muted: #b3b3b3; /* Example muted text color */
-        }
-        body {
-            background-color: var(--surface);
-            color: var(--text-muted);
-        }
-        #pdf-viewer {
-            margin: 20px;
-            padding: 10px;
-            border: 1px solid var(--accent);
-            border-radius: 5px;
-        }
-        .mock-btn {
-            background-color: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 15px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        .mock-btn:hover {
-            background-color: darkcyan;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Model Deployment — Resume Optimization SLM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0c0f1a;
+    --surface: #131828;
+    --surface2: #1a2038;
+    --border: rgba(100,130,255,0.15);
+    --accent: #4f7cff;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --accent4: #f59e0b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --danger: #f87171;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Sora', sans-serif;
+    --serif: 'DM Serif Display', serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── Noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  /* ── Header ── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(12,15,26,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+  }
+  .header-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .header-badge {
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .header-badge span { color: var(--accent); font-weight: 600; }
+  .header-nav { display: flex; gap: 1.5rem; }
+  .header-nav a {
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+    text-decoration: none; letter-spacing: 0.05em;
+    transition: color .2s;
+  }
+  .header-nav a:hover { color: var(--accent); }
+  .status-dot {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent3);
+  }
+  .status-dot::before {
+    content: '';
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent3);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative; z-index: 1;
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse at center, rgba(79,124,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .course-label {
+    display: inline-block;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em;
+    color: var(--accent); text-transform: uppercase;
+    border: 1px solid rgba(79,124,255,0.3);
+    padding: 4px 14px; border-radius: 20px;
+    margin-bottom: 1.5rem;
+    background: rgba(79,124,255,0.05);
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 0.75rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent2); }
+  .hero .subtitle {
+    font-size: 14px; color: var(--text-muted);
+    font-family: var(--mono); letter-spacing: 0.03em;
+    margin-bottom: 2.5rem;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 0; max-width: 900px; margin: 0 auto;
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; background: var(--surface);
+  }
+  .stat-item {
+    flex: 1; min-width: 140px;
+    padding: 1rem 1.25rem;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-val {
+    font-family: var(--mono); font-size: 17px; font-weight: 600;
+    color: var(--accent); display: block; margin-bottom: 2px;
+  }
+  .stat-lbl { font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* ── TOC ── */
+  .toc-section {
+    max-width: 900px; margin: 0 auto 4rem; padding: 0 2rem;
+    position: relative; z-index: 1;
+  }
+  .toc-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+  .toc-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; cursor: pointer; text-decoration: none;
+    transition: all .2s; color: var(--text);
+  }
+  .toc-item:hover {
+    border-color: var(--accent); background: rgba(79,124,255,0.07);
+    transform: translateY(-1px);
+  }
+  .toc-num {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--accent); min-width: 22px; font-weight: 600;
+  }
+  .toc-text { font-size: 13px; color: var(--text-muted); line-height: 1.3; }
+  .toc-text strong { display: block; color: var(--text); font-size: 13.5px; margin-bottom: 1px; }
+  .toc-tag {
+    margin-left: auto; font-family: var(--mono); font-size: 10px;
+    color: var(--text-dim); border: 1px solid var(--border);
+    padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+  }
+
+  /* ── Section wrapper ── */
+  .section {
+    max-width: 1100px; margin: 0 auto 5rem; padding: 0 2rem;
+    position: relative; z-index: 1;
+  }
+
+  .section-header {
+    display: flex; align-items: flex-start; gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-top: 6px; min-width: 70px;
+  }
+  .section-title-wrap {}
+  .section-title {
+    font-family: var(--serif); font-size: 1.9rem; color: #fff;
+    line-height: 1.2; margin-bottom: 4px;
+  }
+  .section-sub {
+    font-family: var(--mono); font-size: 12px; color: var(--text-dim);
+  }
+
+  /* ── Part label ── */
+  .part-label {
+    max-width: 1100px; margin: 0 auto 2rem; padding: 0 2rem;
+    position: relative; z-index: 1;
+  }
+  .part-badge {
+    display: inline-block;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-dim);
+    border-top: 2px solid var(--accent);
+    padding-top: 8px;
+  }
+  .part-badge strong { color: var(--accent); }
+
+  /* ── Prose ── */
+  p { margin-bottom: 1rem; color: var(--text-muted); line-height: 1.75; }
+  p strong { color: var(--text); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card-title {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+  .card h3 {
+    font-family: var(--sans); font-size: 1.05rem; color: var(--text);
+    font-weight: 600; margin-bottom: 0.5rem;
+  }
+
+  /* ── Two col ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+  @media(max-width: 680px){ .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim);
+    padding: 10px 14px; text-align: left;
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  tbody td {
+    padding: 11px 14px; border-bottom: 1px solid rgba(100,130,255,0.07);
+    font-size: 13.5px; color: var(--text-muted);
+    vertical-align: top;
+  }
+  tbody tr:hover td { background: rgba(79,124,255,0.04); }
+  .tag-cell { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    font-family: var(--mono); font-size: 11px;
+    padding: 2px 9px; border-radius: 4px;
+    background: rgba(79,124,255,0.12); color: var(--accent);
+    border: 1px solid rgba(79,124,255,0.2);
+  }
+  .tag.green { background: rgba(52,211,153,0.12); color: var(--accent3); border-color: rgba(52,211,153,0.2); }
+  .tag.amber { background: rgba(245,158,11,0.12); color: var(--accent4); border-color: rgba(245,158,11,0.2); }
+  .tag.red { background: rgba(248,113,113,0.12); color: var(--danger); border-color: rgba(248,113,113,0.2); }
+  .tag.purple { background: rgba(167,139,250,0.12); color: var(--accent2); border-color: rgba(167,139,250,0.2); }
+
+  /* ── Architecture block ── */
+  .arch-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem 2rem;
+    font-family: var(--mono); font-size: 13px; color: var(--text-muted);
+    line-height: 2.2; overflow-x: auto;
+  }
+  .arch-block .node { color: var(--accent); font-weight: 600; }
+  .arch-block .comment { color: var(--text-dim); }
+  .arch-block .arrow { color: var(--accent2); }
+
+  /* ── API mockup ── */
+  .mockup-container {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; margin: 1.5rem 0;
+  }
+  .mockup-topbar {
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .mockup-title { font-family: var(--mono); font-size: 13px; color: var(--text); font-weight: 600; }
+  .mockup-status { display: flex; align-items: center; gap: 8px; }
+  .badge-online {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent3);
+    background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25);
+    padding: 3px 10px; border-radius: 20px;
+  }
+  .badge-online::before {
+    content:''; width:5px; height:5px; border-radius:50%; background:var(--accent3);
+    animation: pulse 2s infinite;
+  }
+
+  /* Stepper */
+  .stepper { display: flex; gap: 0; margin: 1rem 1.5rem; }
+  .step {
+    flex: 1; text-align: center; padding: 10px 5px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    border-bottom: 2px solid var(--border);
+    cursor: pointer; transition: all .2s; position: relative;
+  }
+  .step.active {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 10px; margin-right: 5px;
+    color: var(--text-dim);
+  }
+  .step.active .step-num {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .step.done .step-num { background: var(--accent3); border-color: var(--accent3); color: #fff; }
+  .step.done { color: var(--accent3); border-color: var(--accent3); }
+
+  .mockup-body { padding: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  @media(max-width:680px){ .mockup-body { grid-template-columns: 1fr; } }
+
+  .mock-panel { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+  .mock-label { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+  .mock-file-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: 8px; padding: 1.25rem;
+    text-align: center; margin-bottom: 1rem;
+  }
+  .mock-file-name { font-family: var(--mono); font-size: 13px; color: var(--accent); display: block; margin-bottom: 3px; }
+  .mock-file-meta { font-size: 11px; color: var(--text-dim); }
+  .mock-drop-hint { font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+  .progress-bar { height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+  textarea.mock-jd {
+    width: 100%; min-height: 110px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text-muted); font-family: var(--mono); font-size: 12px;
+    padding: 10px; resize: vertical; margin-bottom: 1rem;
+  }
+  textarea.mock-jd:focus { outline: none; border-color: var(--accent); }
+
+  .token-row { display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+  .token-row span { color: var(--accent); }
+
+  .radio-group { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 1rem; }
+  .radio-opt {
+    font-family: var(--mono); font-size: 11px;
+    padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border); color: var(--text-dim);
+    cursor: pointer; transition: all .2s;
+  }
+  .radio-opt.sel { background: rgba(79,124,255,0.12); border-color: var(--accent); color: var(--accent); }
+
+  .mock-btn {
+    width: 100%; padding: 13px;
+    background: var(--accent); color: #fff;
+    font-family: var(--mono); font-size: 13px; font-weight: 600;
+    border: none; border-radius: 8px; cursor: pointer;
+    transition: all .2s; letter-spacing: 0.04em;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .mock-btn:hover { background: #6b93ff; transform: translateY(-1px); }
+
+  /* Output panel */
+  .output-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+  .out-tab {
+    font-family: var(--mono); font-size: 11px; padding: 8px 14px;
+    color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  .out-tab.active { color: var(--accent); border-color: var(--accent); }
+
+  .resume-preview { font-size: 12.5px; line-height: 1.65; }
+  .resume-preview h4 { color: #fff; font-size: 14px; margin-bottom: 2px; font-family: var(--sans); }
+  .resume-preview .rp-meta { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 1rem; }
+  .resume-preview .rp-section { margin-bottom: 1rem; }
+  .resume-preview .rp-sec-title { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 5px; }
+  .rp-role { font-weight: 600; color: var(--text); font-size: 13px; }
+  .rp-company { color: var(--text-muted); font-size: 12px; }
+  .rp-bullets { list-style: none; padding: 0; }
+  .rp-bullets li { color: var(--text-muted); font-size: 12px; padding-left: 14px; position: relative; margin-bottom: 3px; }
+  .rp-bullets li::before { content:'·'; position:absolute; left:0; color:var(--accent); }
+  .skill-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+  .skill-pill { font-family: var(--mono); font-size: 10px; padding: 2px 9px; border-radius: 4px; background: rgba(79,124,255,0.1); color: var(--accent); border: 1px solid rgba(79,124,255,0.2); }
+
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-box { background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center; }
+  .metric-val { font-family: var(--mono); font-size: 1.4rem; font-weight: 700; color: var(--accent3); display: block; }
+  .metric-lbl { font-size: 11px; color: var(--text-dim); }
+  .metric-box.warn .metric-val { color: var(--accent4); }
+  .metric-box.bad .metric-val { color: var(--danger); }
+
+  .latency-row {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px;
+    display: flex; justify-content: space-between;
+  }
+
+  /* ── Endpoint list ── */
+  .endpoint-list { display: flex; flex-direction: column; gap: 8px; margin: 1.5rem 0; }
+  .endpoint-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 11px 16px;
+    font-family: var(--mono); font-size: 13px;
+  }
+  .method { min-width: 46px; font-weight: 700; font-size: 11px; text-align: center; padding: 3px 7px; border-radius: 4px; }
+  .method.get { background: rgba(52,211,153,0.15); color: var(--accent3); }
+  .method.post { background: rgba(79,124,255,0.15); color: var(--accent); }
+  .endpoint-path { color: var(--text); }
+  .endpoint-desc { color: var(--text-dim); font-size: 11px; margin-left: auto; }
+
+  /* ── Workflow steps ── */
+  .workflow-steps {
+    display: flex; flex-wrap: wrap; gap: 0;
+    counter-reset: wf;
+    margin: 1.5rem 0;
+  }
+  .wf-step {
+    flex: 1; min-width: 160px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-right: none; padding: 1.25rem;
+    position: relative;
+    counter-increment: wf;
+  }
+  .wf-step:last-child { border-right: 1px solid var(--border); }
+  .wf-step::before {
+    content: counter(wf);
+    display: block;
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    color: var(--accent); margin-bottom: 0.5rem;
+    background: rgba(79,124,255,0.1); border: 1px solid rgba(79,124,255,0.2);
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wf-step h4 { font-size: 13px; color: var(--text); margin-bottom: 4px; font-weight: 600; }
+  .wf-step p { font-size: 12px; color: var(--text-dim); margin: 0; line-height: 1.5; }
+  .wf-arrow {
+    display: flex; align-items: center; padding: 0 4px;
+    color: var(--accent2); font-size: 16px; padding-top: 1.5rem;
+  }
+
+  /* ── Important note ── */
+  .important-note {
+    background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.25);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 10px 10px 0; padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .important-note .note-label {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    color: var(--accent2); text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .important-note p { color: var(--text-muted); margin: 0; font-size: 13.5px; }
+
+  /* ── Quote block ── */
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.5rem; margin: 1.5rem 0;
+    background: rgba(79,124,255,0.05); border-radius: 0 10px 10px 0;
+    font-style: italic; color: var(--text-muted);
+  }
+
+  /* ── Monitoring metrics ── */
+  .monitor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 1.5rem 0; }
+  .monitor-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.1rem;
+  }
+  .monitor-card .m-icon { font-size: 1.3rem; margin-bottom: 6px; }
+  .monitor-card h4 { font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 4px; }
+  .monitor-card p { font-size: 12px; color: var(--text-dim); margin: 0; }
+
+  /* ── Maintenance plan ── */
+  .maint-list { list-style: none; padding: 0; margin: 1rem 0; }
+  .maint-list li {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    font-size: 13.5px; color: var(--text-muted);
+  }
+  .maint-list li:last-child { border-bottom: none; }
+  .maint-check {
+    min-width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--accent3); margin-top: 2px;
+  }
+
+  /* ── Team ── */
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 1.5rem; }
+  .team-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem;
+    transition: border-color .2s;
+  }
+  .team-card:hover { border-color: var(--accent); }
+  .team-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 14px; color: #fff;
+    margin-bottom: 10px;
+  }
+  .team-name { font-size: 14px; color: var(--text); font-weight: 600; margin-bottom: 2px; }
+  .team-role { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 8px; }
+  .team-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center; padding: 3rem 2rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    position: relative; z-index: 1;
+  }
+  footer span { color: var(--accent); }
+
+  /* ── Animations ── */
+  .fade-in { animation: fadeIn .6s ease both; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+  .section { animation: fadeIn .5s ease both; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* highlight util */
+  .hl { color: var(--accent); font-weight: 600; }
+  .hl2 { color: var(--accent3); font-weight: 600; }
+  .hl3 { color: var(--accent2); font-weight: 600; }
+</style>
 </head>
 <body>
-    <header>
-        <h1>Model Deployment</h1>
-    </header>
-    <main>
-        <!-- Main content of the document -->
 
-        <section id="pdf-viewer">
-            <h2>PDF Viewer</h2>
-            <canvas id="pdf-canvas" style="width: 100%; max-height: 500px;"></canvas>
-            <div>
-                <button id="prev-btn" class="mock-btn">Previous</button>
-                <button id="next-btn" class="mock-btn">Next</button>
-                <span id="page-counter"></span>
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="header-badge">DTSC 5082 · <span>Group Project</span> · Model Deployment</div>
+    <nav class="header-nav">
+      <a href="#production">Production</a>
+      <a href="#api">API Mockup</a>
+      <a href="#monitoring">Monitoring</a>
+      <a href="#team">Team</a>
+    </nav>
+    <div class="status-dot">Model online</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="course-label">DTSC 5082 · Seminar in Research & Research Methodology · Group Project</div>
+  <h1>Model Deployment<br/><em>Resume Optimization SLM</em></h1>
+  <p class="subtitle">
+    Low-Cost Resume Optimization via Distillation of Large Language Model Behavior into a Fine-Tuned Small Language Model (SLM)
+    &nbsp;·&nbsp; Professor: Clifford K. Whitworth
+  </p>
+
+  <div class="stats-bar fade-in">
+    <div class="stat-item">
+      <span class="stat-val">Qwen3-4B</span>
+      <span class="stat-lbl">Base Model</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val">QLoRA</span>
+      <span class="stat-lbl">Fine-tuning method</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val">1,530</span>
+      <span class="stat-lbl">Training samples</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val">1,876</span>
+      <span class="stat-lbl">Mean resume words</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-val">94%+</span>
+      <span class="stat-lbl">Cost reduction</span>
+    </div>
+  </div>
+</section>
+
+<!-- TOC -->
+<div class="toc-section">
+  <div class="toc-grid">
+    <a class="toc-item" href="#production">
+      <span class="toc-num">01</span>
+      <div class="toc-text"><strong>Production Readiness</strong>Real-time vs. Batch Inference</div>
+      <span class="toc-tag">Part 1</span>
+    </a>
+    <a class="toc-item" href="#api">
+      <span class="toc-num">02</span>
+      <div class="toc-text"><strong>API Interface Mockup</strong>Conceptual Workflow</div>
+      <span class="toc-tag">Part 1</span>
+    </a>
+    <a class="toc-item" href="#monitoring">
+      <span class="toc-num">03</span>
+      <div class="toc-text"><strong>Monitoring & Maintenance</strong>Operational Metrics</div>
+      <span class="toc-tag">Part 1</span>
+    </a>
+    <a class="toc-item" href="#team">
+      <span class="toc-num">04</span>
+      <div class="toc-text"><strong>Team Contributions</strong>Individual Responsibilities</div>
+      <span class="toc-tag">Credits</span>
+    </a>
+  </div>
+</div>
+
+<!-- PART 1 LABEL -->
+<div class="part-label" id="production">
+  <div class="part-badge"><strong>Part 1</strong> — Model Deployment</div>
+</div>
+
+<!-- SECTION 01 — Production Readiness -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-num">Section 01</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Production Readiness</div>
+      <div class="section-sub">Real-Time vs. Batch Inference</div>
+    </div>
+  </div>
+
+  <div class="important-note">
+    <div class="note-label">⚠ Architecture Constraint</div>
+    <p>Our trained artifact is a <strong>LoRA adapter</strong>, not a completely standalone model. To generate outputs in production, the system must load both the base <code style="color:var(--accent2)">Qwen/Qwen3-4B-Instruct-2507</code> model and the fine-tuned adapter together at runtime. That setup requires suitable hardware, sufficient storage, and a model-serving environment capable of handling the merged inference path. <strong>We will only do model deployment.</strong></p>
+  </div>
+
+  <p>This project is production-ready in the form of a backend resume-optimization API. In a real-world application, a user would submit a resume together with a target job description, and the service would return a tailored resume in structured JSON format. The project already includes this deployment path through a FastAPI backend with endpoints for health monitoring, schema access, file-based inference, and text-based inference.</p>
+
+  <p>The most appropriate production mode for this project is <strong>real-time inference</strong>. Resume optimization is typically an interactive task in which a user wants one tailored result for one specific job posting, so the main design is request-response based. A secondary batch mode could also be used in future scenarios such as running one resume against multiple job postings, generating offline benchmark outputs, or performing larger-scale testing.</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">🔴 Real-Time Inference — Primary Mode</div>
+      <h3>User-Facing Interactive Requests</h3>
+      <p>When a candidate submits their resume and a job description, they expect a result promptly. The system handles this through synchronous inference on the self-hosted Qwen3-4B model. At 4-bit quantization, the model requires only 2–3 GB of VRAM, meaning a single A10G or RTX 4090 GPU can serve multiple concurrent users simultaneously — a critical requirement for SaaS scalability.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">🔵 Batch Inference — Secondary Mode</div>
+      <h3>Enterprise &amp; Bulk Processing</h3>
+      <p>Batch mode enables an enterprise recruiting use case: a firm wants to optimize many candidate resumes against a single job description overnight. All jobs queue to the same self-hosted GPU, process sequentially during off-hours, and return results by morning — at a marginal infrastructure cost near zero beyond the existing GPU rental.</p>
+    </div>
+  </div>
+
+  <p>The recommended deployment design is:</p>
+  <ul style="margin:0.5rem 0 1.25rem 1.25rem;color:var(--text-muted);font-size:13.5px;line-height:2;">
+    <li><strong style="color:var(--text)">Primary mode:</strong> Real-time API inference for normal users</li>
+    <li><strong style="color:var(--text)">Secondary mode:</strong> Batch processing for large-scale evaluation or bulk usage</li>
+  </ul>
+
+  <p>The backend is designed to be run on suitable hardware where the base Qwen model and the project's fine-tuned LoRA adapter can be loaded together. The API layer handles input validation, resume parsing, optional job-description scraping, inference, and JSON response formatting.</p>
+
+  <!-- Cost Table -->
+  <h3 style="font-family:var(--mono);font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:1.5rem 0 0.75rem;">Cost Comparison — API vs. Self-Hosted</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Deployment Mode</th>
+          <th>Monthly Cost</th>
+          <th>Latency</th>
+          <th>Control</th>
+          <th>Verdict</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GPT-4 API (10K tokens/req)</td>
+          <td style="color:var(--danger)">~$8,000/month</td>
+          <td>3–8s</td>
+          <td>None — external dependency</td>
+          <td><span class="tag red">Not viable at scale</span></td>
+        </tr>
+        <tr>
+          <td>Self-hosted Qwen3-4B (A10G GPU)</td>
+          <td style="color:var(--accent3)">~$300–500/month</td>
+          <td>15–40s streamed</td>
+          <td>Full — data stays on-premise</td>
+          <td><span class="tag green">Target architecture</span></td>
+        </tr>
+        <tr>
+          <td>Self-hosted Qwen3-4B (RTX 4090)</td>
+          <td style="color:var(--accent3)">~$150–250/month</td>
+          <td>20–50s streamed</td>
+          <td>Full</td>
+          <td><span class="tag amber">Budget early-stage option</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Architecture -->
+  <h3 style="font-family:var(--mono);font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:1.5rem 0 0.75rem;">Production Architecture Stack</h3>
+  <div class="arch-block">
+    <span class="node">User Browser</span><br/>
+    &nbsp;&nbsp;<span class="arrow">↓</span><br/>
+    <span class="node">FastAPI Backend</span><br/>
+    &nbsp;&nbsp;<span class="arrow">├──</span> <span class="comment">Resume Parser (PDF/DOCX → text) ← OCR pipeline</span><br/>
+    &nbsp;&nbsp;<span class="arrow">├──</span> <span class="comment">Text Cleaner (non-ASCII removal, whitespace normalization)</span><br/>
+    &nbsp;&nbsp;<span class="arrow">├──</span> <span class="comment">Prompt Builder (resume + JD → chat-format JSONL)</span><br/>
+    &nbsp;&nbsp;<span class="arrow">↓</span><br/>
+    <span class="node">Inference Server (vLLM / TGI)</span><br/>
+    &nbsp;&nbsp;<span class="arrow">├──</span> <span class="comment">Qwen3-4B-Instruct-2507 base + QLoRA LoRA adapter (4-bit, rank r=16)</span><br/>
+    &nbsp;&nbsp;<span class="arrow">├──</span> <span class="comment">Streaming token output</span><br/>
+    &nbsp;&nbsp;<span class="arrow">↓</span><br/>
+    <span class="node">JSON Schema Validator</span><br/>
+    &nbsp;&nbsp;<span class="arrow">├──</span> <span class="comment">Required field presence check</span><br/>
+    &nbsp;&nbsp;<span class="arrow">├──</span> <span class="comment">Hallucination detection (cross-reference vs original resume)</span><br/>
+    &nbsp;&nbsp;<span class="arrow">↓</span><br/>
+    <span class="node">Response → User</span> <span class="comment">(streamed tailored resume + quality metrics)</span>
+  </div>
+</section>
+
+<!-- SECTION 02 — API Mockup -->
+<section class="section" id="api">
+  <div class="section-header">
+    <div class="section-num">Section 02</div>
+    <div class="section-title-wrap">
+      <div class="section-title">API Interface Mockup</div>
+      <div class="section-sub">Conceptual Workflow &amp; Interactive Demo</div>
+    </div>
+  </div>
+
+  <p>The following mockup shows exactly how a candidate interacts with the system — from uploading their resume to receiving a structured, validated tailored resume. Every element maps directly to a component of the actual pipeline built in the project's API backend.</p>
+
+  <!-- Available Endpoints -->
+  <h3 style="font-family:var(--mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 0.75rem;">Available Live API Endpoints</h3>
+  <div class="endpoint-list">
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/</span>
+      <span class="endpoint-desc">Root health check</span>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/health</span>
+      <span class="endpoint-desc">Model & hardware status</span>
+    </div>
+    <div class="endpoint-row">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/schema</span>
+      <span class="endpoint-desc">JSON output schema definition</span>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/optimize</span>
+      <span class="endpoint-desc">File-based resume inference</span>
+    </div>
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <span class="endpoint-path">/optimize/text</span>
+      <span class="endpoint-desc">Text-based resume inference</span>
+    </div>
+  </div>
+
+  <!-- Interactive Mockup -->
+  <div class="mockup-container">
+    <div class="mockup-topbar">
+      <div class="mockup-title">ResumeAI — Qwen3-4B SLM &nbsp;<span style="font-size:11px;color:var(--text-dim);font-weight:400">Self-hosted · LoRA adapter · 4-bit quantized</span></div>
+      <div class="mockup-status"><span class="badge-online">Model online</span></div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step done"><span class="step-num">✓</span>Upload resume</div>
+      <div class="step done"><span class="step-num">✓</span>Job description</div>
+      <div class="step active"><span class="step-num">3</span>Configure</div>
+      <div class="step"><span class="step-num">4</span>View results</div>
+    </div>
+
+    <div class="mockup-body">
+      <!-- Left: Input -->
+      <div>
+        <div class="mock-panel" style="margin-bottom:1rem;">
+          <div class="mock-label">Resume Input</div>
+          <div class="mock-file-zone">
+            <span class="mock-file-name">mp_abhinav_resume.pdf</span>
+            <span class="mock-file-meta">142 KB · 2 pages · text extracted</span>
+            <div class="mock-drop-hint">Drop a new file or click to upload (PDF, DOCX)</div>
+            <div class="progress-bar" style="margin-top:10px;"><div class="progress-fill" style="width:100%"></div></div>
+          </div>
+          <div class="token-row">Resume tokens <span>1,847 / 10k</span></div>
+          <div class="token-row">JD tokens <span>0 / 10k</span></div>
+          <div class="token-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:2px;">Total prompt <span>1,847 / 10k</span></div>
+        </div>
+
+        <div class="mock-panel" style="margin-bottom:1rem;">
+          <div class="mock-label">Job Description</div>
+          <textarea class="mock-jd" readonly>Senior Software Engineer — [Company Name]
+We are looking for a software engineer with experience in Java, Spring Boot, AWS/GCP, and microservices. Must have proficiency in Python and modern AI/ML workflows. Familiarity with LLMs, document parsing, and agentic systems is a strong plus.</textarea>
+          <div class="token-row">JD tokens <span>312 / 10k</span></div>
+        </div>
+
+        <div class="mock-panel">
+          <div class="mock-label" style="margin-bottom:8px;">Output Mode</div>
+          <div class="radio-group">
+            <div class="radio-opt sel">Structured JSON</div>
+            <div class="radio-opt">Plain text</div>
+          </div>
+          <div class="mock-label" style="margin-bottom:8px;">Inference Mode</div>
+          <div class="radio-group">
+            <div class="radio-opt sel">Real-time (stream)</div>
+            <div class="radio-opt">Batch (queue)</div>
+          </div>
+          <button class="mock-btn" onclick="runInference()">
+            <span id="btn-text">Generate tailored resume →</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Output -->
+      <div>
+        <div class="mock-panel" style="height:100%;">
+          <div class="output-tabs">
+            <div class="out-tab active" onclick="showTab('preview',this)">Resume preview</div>
+            <div class="out-tab" onclick="showTab('json',this)">JSON schema</div>
+            <div class="out-tab" onclick="showTab('metrics',this)">Metrics</div>
+          </div>
+
+          <!-- Preview tab -->
+          <div id="tab-preview" class="resume-preview">
+            <h4>MALLARAPU PAVAN ABHINAV</h4>
+            <div class="rp-meta">pempabhinav1426@gmail.com · linkedin.com/in/abhinav1426 · Hyderabad, India</div>
+
+            <div class="rp-section">
+              <div class="rp-sec-title">Summary</div>
+              <p style="font-size:12px;margin:0;color:var(--text-muted)">Software Engineer with 3+ years at ADP building scalable microservices, Java/Spring Boot backends, and GenAI-powered data pipelines on AWS and GCP. Experienced in LLM integration, document parsing, and agentic workflows.</p>
             </div>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2026 Example Company</p>
-    </footer>
 
-    <script>
-        const url = 'path/to/your/pdf/document.pdf'; // Update this path
-        let pdfDoc = null, pageNum = 1, pageIsRendering = false, pageNumIsPending = null;
+            <div class="rp-section">
+              <div class="rp-sec-title">Experience</div>
+              <div class="rp-role">Software Engineer · ADP</div>
+              <div class="rp-company">June 2022 – Present · Hyderabad, India</div>
+              <ul class="rp-bullets" style="margin-top:5px;">
+                <li>Built GenAI-powered data extraction system (Project Manthan), cutting onboarding from 6 months to 15 days</li>
+                <li>Designed asynchronous Java application gateway to manage high-traffic microservice routing</li>
+                <li>Managed Spring Boot &amp; JDK lifecycle upgrades across multiple production microservices</li>
+                <li>Contributed to LLM training for complex document parsing and data extraction workflows</li>
+                <li>Resolved security vulnerabilities and optimized Smart Compliance Canada application performance</li>
+              </ul>
+            </div>
 
-        const pdfCanvas = document.getElementById('pdf-canvas');
-        const ctx = pdfCanvas.getContext('2d');
-        const pageCounter = document.getElementById('page-counter');
+            <div class="rp-section">
+              <div class="rp-sec-title">Skills</div>
+              <div class="skill-pills">
+                <span class="skill-pill">Java</span>
+                <span class="skill-pill">Spring Boot</span>
+                <span class="skill-pill">Python</span>
+                <span class="skill-pill">AWS</span>
+                <span class="skill-pill">GCP</span>
+                <span class="skill-pill">LLM</span>
+                <span class="skill-pill">MCP</span>
+                <span class="skill-pill">ReactJs</span>
+                <span class="skill-pill">Docker</span>
+                <span class="skill-pill">Kubernetes</span>
+                <span class="skill-pill">Postgres SQL</span>
+                <span class="skill-pill">MongoDB</span>
+              </div>
+            </div>
+          </div>
 
-        document.getElementById('prev-btn').addEventListener('click', function() {
-            if(pageNum <= 1) return;
-            pageNum--;
-            renderPage(pageNum);
-        });
+          <!-- JSON tab -->
+          <div id="tab-json" style="display:none;">
+            <pre style="font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.8;overflow-x:auto;">{
+  <span style="color:var(--accent)">"name"</span>: <span style="color:var(--accent3)">"MALLARAPU PAVAN ABHINAV"</span>,
+  <span style="color:var(--accent)">"email"</span>: <span style="color:var(--accent3)">"pempabhinav1426@gmail.com"</span>,
+  <span style="color:var(--accent)">"summary"</span>: <span style="color:var(--accent3)">"Software Engineer with..."</span>,
+  <span style="color:var(--accent)">"skills"</span>: [<span style="color:var(--accent3)">"Java"</span>, <span style="color:var(--accent3)">"Spring Boot"</span>, ...],
+  <span style="color:var(--accent)">"experience"</span>: [{
+    <span style="color:var(--accent)">"company"</span>: <span style="color:var(--accent3)">"ADP"</span>,
+    <span style="color:var(--accent)">"bullets"</span>: [...]
+  }],
+  <span style="color:var(--accent)">"education"</span>: [...],
+  <span style="color:var(--accent)">"projects"</span>: [...]
+}</pre>
+            <div style="font-family:var(--mono);font-size:11px;margin-top:10px;display:flex;gap:8px;align-items:center;">
+              <span class="tag green">JSON schema valid</span>
+              <span style="color:var(--text-dim)">All required fields present</span>
+            </div>
+          </div>
 
-        document.getElementById('next-btn').addEventListener('click', function() {
-            if(pageNum >= pdfDoc.numPages) return;
-            pageNum++;
-            renderPage(pageNum);
-        });
+          <!-- Metrics tab -->
+          <div id="tab-metrics" style="display:none;">
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <span class="metric-val">96%</span>
+                <span class="metric-lbl">Schema validity</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-val">0.83</span>
+                <span class="metric-lbl">Semantic similarity</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-val">91%</span>
+                <span class="metric-lbl">Skill coverage</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-val">0</span>
+                <span class="metric-lbl">Hallucinations</span>
+              </div>
+            </div>
+            <div class="latency-row">
+              <span>Latency: <span style="color:var(--accent)">24s</span></span>
+              <span>Tokens: <span style="color:var(--accent)">1,183</span></span>
+              <span>Cost: <span style="color:var(--accent3)">~$0.0003</span></span>
+            </div>
+          </div>
 
-        function renderPage(num) {
-            pageIsRendering = true;
-            pdfDoc.getPage(num).then(page => {
-                const viewport = page.getViewport({ scale: 1 });
-                pdfCanvas.height = viewport.height;
-                pdfCanvas.width = viewport.width;
+          <!-- API snippet -->
+          <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:6px;display:flex;justify-content:space-between;">
+              <span>POST /optimize &nbsp;·&nbsp; REST API endpoint</span>
+              <button onclick="copySnippet()" style="background:none;border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer;" id="copy-btn">copy</button>
+            </div>
+            <pre id="api-snippet" style="font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.7;overflow-x:auto;">resume_file: mp_abhinav_resume.pdf
+mode: "realtime"
+stream: true
 
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport
-                };
+← returns: tailored_resume (JSON)
+           + schema_valid: true
+           + quality_metrics</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                page.render(renderContext).promise.then(() => {
-                    pageIsRendering = false;
-                    if (pageNumIsPending !== null) {
-                        renderPage(pageNumIsPending);
-                        pageNumIsPending = null;
-                    }
-                });
-                pageCounter.textContent = 'Page ' + num + ' of ' + pdfDoc.numPages;
-            });
-        }
+  <!-- Workflow Steps -->
+  <h3 style="font-family:var(--mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:2rem 0 0.75rem;">Conceptual Workflow — How Data Moves Through the System</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;">
+    <div class="wf-step" style="border-radius:12px 0 0 12px;">
+      <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);background:rgba(79,124,255,0.1);border:1px solid rgba(79,124,255,0.2);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">1</div>
+      <h4>User Input</h4>
+      <p>Upload resume (PDF/DOCX). Paste job description.</p>
+    </div>
+    <div class="wf-step">
+      <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);background:rgba(79,124,255,0.1);border:1px solid rgba(79,124,255,0.2);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">2</div>
+      <h4>Parse &amp; Build Prompt</h4>
+      <p>OCR extraction. Chat-format prompt construction.</p>
+    </div>
+    <div class="wf-step">
+      <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);background:rgba(79,124,255,0.1);border:1px solid rgba(79,124,255,0.2);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">3</div>
+      <h4>SLM Inference</h4>
+      <p>Qwen3-4B + LoRA adapter (4-bit) generates structured JSON.</p>
+    </div>
+    <div class="wf-step">
+      <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);background:rgba(79,124,255,0.1);border:1px solid rgba(79,124,255,0.2);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">4</div>
+      <h4>Validate &amp; Score</h4>
+      <p>Schema check, hallucination detection, quality metrics.</p>
+    </div>
+    <div class="wf-step" style="border-radius:0 12px 12px 0;border-right:1px solid var(--border);">
+      <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent3);background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">5</div>
+      <h4>Return Result</h4>
+      <p>Streamed resume preview + JSON + quality metrics.</p>
+    </div>
+  </div>
 
-        pdfjsLib.getDocument(url).promise.then(pdfDoc_ => {
-            pdfDoc = pdfDoc_;
-            renderPage(pageNum);
-        });
-    </script>
+  <p>The project also includes saved deployment artifacts that demonstrate the API workflow: the uploaded input file and the generated JSON response show that the backend stores both uploaded content and generated tailored-resume outputs — useful in a production-like environment for traceability, debugging, and quality review.</p>
+</section>
+
+<!-- SECTION 03 — Monitoring -->
+<section class="section" id="monitoring">
+  <div class="section-header">
+    <div class="section-num">Section 03</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Monitoring &amp; Maintenance</div>
+      <div class="section-sub">Operational Metrics &amp; Maintenance Plan</div>
+    </div>
+  </div>
+
+  <p>A deployed model must be monitored continuously to ensure that it remains reliable and does not become stale as inputs evolve over time. For this project, the most important operational metrics and output-quality checks are tracked across the system lifecycle.</p>
+
+  <h3 style="font-family:var(--mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:1.5rem 0 0.75rem;">Key Operational Metrics</h3>
+  <div class="monitor-grid">
+    <div class="monitor-card">
+      <div class="m-icon">⏱</div>
+      <h4>Request Latency</h4>
+      <p>End-to-end response time per API call. Target: under 50s streamed for real-time mode.</p>
+    </div>
+    <div class="monitor-card">
+      <div class="m-icon">❌</div>
+      <h4>API Failure Rate</h4>
+      <p>Percentage of requests returning 4xx/5xx errors. Alert threshold: &gt;2%.</p>
+    </div>
+    <div class="monitor-card">
+      <div class="m-icon">📋</div>
+      <h4>JSON Parse Success Rate</h4>
+      <p>Proportion of outputs successfully parsed against the defined schema structure.</p>
+    </div>
+    <div class="monitor-card">
+      <div class="m-icon">✅</div>
+      <h4>Schema Validity Rate</h4>
+      <p>Whether required schema fields are consistently present in every generated output.</p>
+    </div>
+    <div class="monitor-card">
+      <div class="m-icon">💻</div>
+      <h4>Model &amp; Hardware Status</h4>
+      <p>GPU utilization, VRAM usage, and adapter loading status from the <code style="font-size:10px;color:var(--accent)">/health</code> endpoint.</p>
+    </div>
+    <div class="monitor-card">
+      <div class="m-icon">🧠</div>
+      <h4>Hallucination Rate</h4>
+      <p>Cross-referencing generated bullets and skills against the original source resume.</p>
+    </div>
+  </div>
+
+  <h3 style="font-family:var(--mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin:1.5rem 0 0.75rem;">Practical Maintenance Plan</h3>
+  <ul class="maint-list">
+    <li>
+      <div class="maint-check">✓</div>
+      <div>Log request/response outcomes for each API call — record latency, schema validity, and token counts per request for downstream analysis.</div>
+    </li>
+    <li>
+      <div class="maint-check">✓</div>
+      <div>Periodically sample outputs for manual review — a random ~5% sample each week to catch quality regressions that automated metrics may miss.</div>
+    </li>
+    <li>
+      <div class="maint-check">✓</div>
+      <div>Check whether parsing quality declines for certain file types — monitor PDF vs. DOCX output quality separately, as the training corpus is 72.4% DOCX.</div>
+    </li>
+    <li>
+      <div class="maint-check">✓</div>
+      <div>Monitor changes in job-description vocabulary and document structure — retrain or refresh the LoRA adapter if production input patterns drift significantly from the training distribution.</div>
+    </li>
+    <li>
+      <div class="maint-check">✓</div>
+      <div>Track hallucination detection results — ensure generated bullets and credentials trace back to content present in the submitted resume, not invented by the model.</div>
+    </li>
+  </ul>
+
+  <blockquote>
+    This is especially important because the system is built around long, unstructured resume documents and job descriptions, while also requiring strict schema-based output. In production, a model that still runs but starts violating JSON structure or inventing unsupported content would not be acceptable — reliability of schema adherence is a non-negotiable production requirement.
+  </blockquote>
+</section>
+
+<!-- SECTION 04 — Team -->
+<section class="section" id="team">
+  <div class="section-header">
+    <div class="section-num">Section 04</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Team Contributions</div>
+      <div class="section-sub">Deployment Assignment — Individual Responsibilities</div>
+    </div>
+  </div>
+
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="team-avatar">VB</div>
+      <div class="team-name">Vaishnav Busha</div>
+      <div class="team-role">Software Engineer Lead</div>
+      <div class="team-desc">Led backend architecture design and FastAPI endpoint development. Managed LoRA adapter integration, Spring Boot microservices experience, and GenAI workflow design including the Project Manthan data extraction system.</div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">NC</div>
+      <div class="team-name">Nishith Chowdary Mareddy</div>
+      <div class="team-role">Model Development</div>
+      <div class="team-desc">Led QLoRA fine-tuning methodology, adapter training configuration (rank r=16, 4-bit quantization), and vLLM inference server selection. Provided model architecture context for deployment writeup.</div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">JS</div>
+      <div class="team-name">Jyothi Swaroop Ganapavarapu</div>
+      <div class="team-role">Data &amp; Preprocessing Lead</div>
+      <div class="team-desc">Managed dataset acquisition (1,530 training pairs), OCR-based resume parsing, multi-format PDF/DOCX handling, and prompt construction pipeline. Built the Gemini batch request workflow for teacher output generation.</div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">TK</div>
+      <div class="team-name">Talha Khan</div>
+      <div class="team-role">Evaluation &amp; Cost Analysis</div>
+      <div class="team-desc">Designed the quality metrics framework (schema validity, semantic similarity, skill coverage, hallucination rate). Led the cost modeling comparison showing 94%+ reduction versus GPT-4 API at production scale.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.25rem;border-color:rgba(79,124,255,0.2);">
+    <div class="card-title">Collaborative Contributions — All Members</div>
+    <p style="margin:0;">Problem framing for production deployment design, API endpoint specification, architecture stack selection, monitoring metric definition, maintenance plan authoring, final document review and integration.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  DTSC 5082 · Seminar in Research and Research Methodology · Group Project · Professor: Clifford K. Whitworth<br/>
+  <br/>
+  Dataset: final_resume_dataset.parquet (n=1,530) · Model: <span>Qwen3-4B-Instruct-2507</span> · Fine-tuning: <span>QLoRA LoRA adapter</span> · Submission: Model Deployment
+</footer>
+
+<script>
+  // Tab switching
+  function showTab(name, el) {
+    ['preview','json','metrics'].forEach(t => {
+      document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+    });
+    document.querySelectorAll('.out-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Simulate inference button
+  function runInference() {
+    const btn = document.getElementById('btn-text');
+    btn.textContent = '⏳ Running inference...';
+    document.querySelector('.mock-btn').disabled = true;
+    document.querySelector('.mock-btn').style.opacity = '0.7';
+
+    // Simulate progress through stepper
+    setTimeout(() => {
+      document.querySelectorAll('.step')[2].classList.remove('active');
+      document.querySelectorAll('.step')[2].classList.add('done');
+      document.querySelectorAll('.step')[2].querySelector('.step-num').textContent = '✓';
+      document.querySelectorAll('.step')[3].classList.add('active');
+      btn.textContent = '✅ Resume generated!';
+      document.querySelector('.mock-btn').style.background = 'var(--accent3)';
+      document.querySelector('.mock-btn').style.opacity = '1';
+      document.querySelector('.mock-btn').disabled = false;
+
+      // Auto-switch to metrics tab
+      showTab('metrics', document.querySelectorAll('.out-tab')[2]);
+      document.querySelectorAll('.out-tab').forEach((t,i) => i===2 ? t.classList.add('active') : t.classList.remove('active'));
+
+      // Reset after 3s
+      setTimeout(() => {
+        btn.textContent = 'Generate tailored resume →';
+        document.querySelector('.mock-btn').style.background = 'var(--accent)';
+        document.querySelectorAll('.step')[3].classList.remove('active');
+      }, 3000);
+    }, 2000);
+  }
+
+  // Copy snippet
+  function copySnippet() {
+    const text = document.getElementById('api-snippet').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      document.getElementById('copy-btn').textContent = 'copied!';
+      setTimeout(() => document.getElementById('copy-btn').textContent = 'copy', 2000);
+    });
+  }
+
+  // Smooth scroll for TOC
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+
 </body>
 </html>
