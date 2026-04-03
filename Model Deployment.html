@@ -4,32 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Model Deployment</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script> <!-- Added PDF.js script -->
+    
+    <style>
+        :root {
+            --surface: #121212; /* Example dark theme surface color */
+            --accent: #1db954; /* Example accent color */
+            --text-muted: #b3b3b3; /* Example muted text color */
+        }
+        body {
+            background-color: var(--surface);
+            color: var(--text-muted);
+        }
+        #pdf-viewer {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+        }
+        .mock-btn {
+            background-color: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .mock-btn:hover {
+            background-color: darkcyan;
+        }
+    </style>
 </head>
 <body>
-    <h1>Model Deployment</h1>
-    <p>Deploy your machine learning model easily.</p>
-    
-    <!-- Your existing content -->
-    
-    <!-- PDF Viewer Section -->
-    <div id="pdf-viewer">
-        <canvas id="pdf-canvas"></canvas>
-        <div>
-            <button id="prev" onclick="previousPage()">Previous</button>
-            <button id="next" onclick="nextPage()">Next</button>
-            <span>Page: <span id="page-num"></span> of <span id="num-pages"></span></span>
-        </div>
-    </div>
+    <header>
+        <h1>Model Deployment</h1>
+    </header>
+    <main>
+        <!-- Main content of the document -->
+
+        <section id="pdf-viewer">
+            <h2>PDF Viewer</h2>
+            <canvas id="pdf-canvas" style="width: 100%; max-height: 500px;"></canvas>
+            <div>
+                <button id="prev-btn" class="mock-btn">Previous</button>
+                <button id="next-btn" class="mock-btn">Next</button>
+                <span id="page-counter"></span>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2026 Example Company</p>
+    </footer>
 
     <script>
-        let pdfDoc = null,
-            pageNum = 1,
-            pageIsRendering = false,
-            pageNumIsPending = null;
+        const url = 'path/to/your/pdf/document.pdf'; // Update this path
+        let pdfDoc = null, pageNum = 1, pageIsRendering = false, pageNumIsPending = null;
 
         const pdfCanvas = document.getElementById('pdf-canvas');
         const ctx = pdfCanvas.getContext('2d');
+        const pageCounter = document.getElementById('page-counter');
+
+        document.getElementById('prev-btn').addEventListener('click', function() {
+            if(pageNum <= 1) return;
+            pageNum--;
+            renderPage(pageNum);
+        });
+
+        document.getElementById('next-btn').addEventListener('click', function() {
+            if(pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            renderPage(pageNum);
+        });
 
         function renderPage(num) {
             pageIsRendering = true;
@@ -38,55 +84,26 @@
                 pdfCanvas.height = viewport.height;
                 pdfCanvas.width = viewport.width;
 
-                const renderCtx = {
+                const renderContext = {
                     canvasContext: ctx,
                     viewport: viewport
                 };
-                page.render(renderCtx).promise.then(() => {
+
+                page.render(renderContext).promise.then(() => {
                     pageIsRendering = false;
                     if (pageNumIsPending !== null) {
                         renderPage(pageNumIsPending);
                         pageNumIsPending = null;
                     }
                 });
+                pageCounter.textContent = 'Page ' + num + ' of ' + pdfDoc.numPages;
             });
-
-            document.getElementById('page-num').textContent = num;
         }
 
-        function queueRenderPage(num) {
-            if (pageIsRendering) {
-                pageNumIsPending = num;
-            } else {
-                renderPage(num);
-            }
-        }
-
-        function nextPage() {
-            if (pageNum < pdfDoc.numPages) {
-                pageNum++;
-                queueRenderPage(pageNum);
-            }
-        }
-
-        function previousPage() {
-            if (pageNum > 1) {
-                pageNum--;
-                queueRenderPage(pageNum);
-            }
-        }
-
-        // Loading the PDF document
-        pdfjsLib.getDocument('path/to/your/document.pdf').promise.then(pdfDoc_ => {
+        pdfjsLib.getDocument(url).promise.then(pdfDoc_ => {
             pdfDoc = pdfDoc_;
-            document.getElementById('num-pages').textContent = pdfDoc.numPages;
             renderPage(pageNum);
         });
     </script>
-    
-    <!-- Footer Section -->
-    <footer>
-        <p>Footer Content</p>
-    </footer>
 </body>
 </html>
